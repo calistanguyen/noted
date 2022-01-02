@@ -3,10 +3,18 @@
 import 'package:flutter/material.dart';
 
 class NoteCard extends StatefulWidget {
-  const NoteCard({Key? key, required this.text, required this.date})
+  const NoteCard(
+      {Key? key,
+      required this.text,
+      required this.date,
+      required this.itemIndex,
+      required this.removeItem})
       : super(key: key);
   final String text;
   final String date;
+  final int itemIndex;
+  final Function(int) removeItem;
+  // final List<note.Note> noteList;
   @override
   _NoteCardState createState() => _NoteCardState();
 }
@@ -33,6 +41,8 @@ class _NoteCardState extends State<NoteCard> {
                   padding: EdgeInsets.only(top: 30.0),
                   child: BottomRow(
                     date: widget.date,
+                    index: widget.itemIndex,
+                    removeItem: widget.removeItem,
                   ),
                 ),
               ],
@@ -56,17 +66,53 @@ class Note extends StatelessWidget {
 }
 
 class BottomRow extends StatelessWidget {
-  const BottomRow({Key? key, required this.date}) : super(key: key);
+  const BottomRow(
+      {Key? key,
+      required this.date,
+      required this.index,
+      required this.removeItem})
+      : super(key: key);
 
   final String date;
+  final int index;
+  final Function(int) removeItem;
   @override
   Widget build(BuildContext context) {
     return Container(
         padding: const EdgeInsets.only(left: 20.0, right: 30),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [Text(date), HeartIcon()],
+          children: [
+            Text(date),
+            Row(
+              children: [
+                HeartIcon(),
+                DeleteIcon(
+                  index: index,
+                  removeItem: removeItem,
+                ),
+              ],
+            )
+          ],
         ));
+  }
+}
+
+class DeleteIcon extends StatelessWidget {
+  const DeleteIcon({Key? key, required this.index, required this.removeItem})
+      : super(key: key);
+
+  final int index;
+  final Function(int) removeItem;
+  @override
+  Widget build(BuildContext context) {
+    return IconButton(
+      onPressed: () => removeItem(index),
+      icon: Icon(Icons.delete_outline),
+      padding: EdgeInsets.all(0),
+      splashColor: Colors.transparent,
+      highlightColor: Colors.transparent,
+    );
   }
 }
 

@@ -2,8 +2,11 @@
 
 import 'package:flutter/material.dart';
 import 'package:noted/note_card.dart';
+// import 'package:noted/submit_button.dart';
 import 'note.dart' as note;
 import 'package:intl/intl.dart';
+
+// import 'package:noted/add_note.dart';
 
 void main() {
   runApp(const MyApp());
@@ -61,9 +64,9 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  void _addToList() {
+  void _deleteListItem(int index) {
     setState(() {
-      noteList.add(note.Note(text: "this is a new note", date: "12/23/21"));
+      noteList.removeAt(index);
     });
   }
 
@@ -83,13 +86,20 @@ class _MyHomePageState extends State<MyHomePage> {
               itemCount: noteList.length,
               itemBuilder: (BuildContext context, int index) {
                 return NoteCard(
-                    text: noteList[index].text, date: noteList[index].date);
+                  text: noteList[index].text,
+                  date: noteList[index].date,
+                  itemIndex: index,
+                  removeItem: _deleteListItem,
+                );
               })),
       floatingActionButton: FloatingActionButton(
           onPressed: () {
             showDialog(
-                context: context,
-                builder: (BuildContext context) => AddNoteDialog());
+                    context: context,
+                    builder: (BuildContext context) => AddNoteDialog())
+                .then((value) => setState(() {
+                      noteList.add(value);
+                    }));
           },
           tooltip: 'Increment',
           child: const Icon(Icons.add),
@@ -99,43 +109,73 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 }
 
-Widget customButton(BuildContext context) {
-  return InkWell(
-      onTap: () => {},
-      child: Center(
-          child: Container(
-              width: 180,
-              height: 40,
-              decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(20),
-                  color: Theme.of(context).primaryColor),
-              child: Center(
-                child: Padding(
-                  padding: const EdgeInsets.only(top: 5.0),
-                  child: Text("submit",
-                      style: Theme.of(context).textTheme.headline3),
-                ),
-              ))));
-}
-
 String currentDate() {
   var now = DateTime.now();
   var formatter = DateFormat.yMd().add_jm();
   String formattedDate = formatter.format(now);
-  return formattedDate; // 2016-01-25
+  return formattedDate;
 }
 
-class AddNoteDialog extends StatelessWidget {
+customPopupBorder() {
+  return OutlineInputBorder(
+      borderSide: const BorderSide(color: Colors.black, width: 1),
+      borderRadius: BorderRadius.circular(15));
+}
+
+Widget submitNoteButton(BuildContext context, note.Note newNote) {
+  return ElevatedButton(
+      onPressed: () => {Navigator.of(context).pop(newNote)},
+      child: Padding(
+        padding: const EdgeInsets.only(top: 5.0),
+        child: Text("submit", style: Theme.of(context).textTheme.headline3),
+      ),
+      style: ElevatedButton.styleFrom(
+          primary: Theme.of(context).primaryColor,
+          elevation: 0,
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          padding: EdgeInsets.only(left: 65, right: 65)));
+}
+
+class AddNoteDialog extends StatefulWidget {
   const AddNoteDialog({Key? key}) : super(key: key);
 
   @override
+  State<AddNoteDialog> createState() => _AddNoteDialogState();
+}
+
+class _AddNoteDialogState extends State<AddNoteDialog> {
+  final TextEditingController noteController = TextEditingController();
+
+  var text = "";
+
+  @override
+  void initState() {
+    super.initState();
+    noteController.addListener(() {
+      setState(() {
+        text = noteController.text;
+      });
+    });
+  }
+
+  @override
+  void dispose() {
+    // Clean up the controller when the widget is removed from the widget tree.
+    // This also removes the _printLatestValue listener.
+    noteController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return Dialog(
+    return AlertDialog(
         shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(50.0),
             side: BorderSide(color: Colors.black, width: 2)),
-        // title: Text('new note', style: Theme.of(context).textTheme.headline2),
-        child: SizedBox(
+        insetPadding: EdgeInsets.all(0),
+        contentPadding: EdgeInsets.all(0),
+        content: SizedBox(
           height: 320,
           width: 333,
           child: Column(
@@ -149,18 +189,15 @@ class AddNoteDialog extends StatelessWidget {
                   width: 270,
                   height: 100,
                   child: TextField(
+                      maxLength: 50,
+                      cursorColor: Colors.black,
+                      controller: noteController,
                       maxLines: 8,
                       decoration: InputDecoration(
                         focusColor: Colors.black,
                         hoverColor: Colors.black,
-                        focusedBorder: OutlineInputBorder(
-                            borderSide:
-                                const BorderSide(color: Colors.black, width: 1),
-                            borderRadius: BorderRadius.circular(15)),
-                        enabledBorder: OutlineInputBorder(
-                            borderSide:
-                                const BorderSide(color: Colors.black, width: 1),
-                            borderRadius: BorderRadius.circular(15)),
+                        focusedBorder: customPopupBorder(),
+                        enabledBorder: customPopupBorder(),
                         border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(15)),
                       ))),
@@ -178,13 +215,13 @@ class AddNoteDialog extends StatelessWidget {
                   Expanded(child: Container()),
                   Padding(
                     padding: const EdgeInsets.only(right: 35.0),
-                    child: Icon(Icons.favorite_outline),
                   )
                 ]),
               ),
               Padding(
                 padding: const EdgeInsets.only(top: 30.0),
-                child: customButton(context),
+                child: submitNoteButton(
+                    context, note.Note(text: text, date: currentDate())),
               )
             ],
           ),
