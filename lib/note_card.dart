@@ -7,13 +7,17 @@ class NoteCard extends StatefulWidget {
       {Key? key,
       required this.text,
       required this.date,
+      required this.isFavored,
       required this.itemIndex,
-      required this.removeItem})
+      required this.removeItem,
+      required this.favoredListener})
       : super(key: key);
   final String text;
   final String date;
+  final bool isFavored;
   final int itemIndex;
   final Function(int) removeItem;
+  final Function(int, bool) favoredListener;
   // final List<note.Note> noteList;
   @override
   _NoteCardState createState() => _NoteCardState();
@@ -43,6 +47,8 @@ class _NoteCardState extends State<NoteCard> {
                     date: widget.date,
                     index: widget.itemIndex,
                     removeItem: widget.removeItem,
+                    isFavored: widget.isFavored,
+                    favoredListener: widget.favoredListener,
                   ),
                 ),
               ],
@@ -66,16 +72,20 @@ class Note extends StatelessWidget {
 }
 
 class BottomRow extends StatelessWidget {
-  const BottomRow(
-      {Key? key,
-      required this.date,
-      required this.index,
-      required this.removeItem})
-      : super(key: key);
+  const BottomRow({
+    Key? key,
+    required this.date,
+    required this.index,
+    required this.isFavored,
+    required this.removeItem,
+    required this.favoredListener,
+  }) : super(key: key);
 
   final String date;
   final int index;
+  final bool isFavored;
   final Function(int) removeItem;
+  final Function(int, bool) favoredListener;
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -86,7 +96,11 @@ class BottomRow extends StatelessWidget {
             Text(date),
             Row(
               children: [
-                HeartIcon(),
+                HeartIcon(
+                  isFavored: isFavored,
+                  favoredListener: favoredListener,
+                  index: index,
+                ),
                 DeleteIcon(
                   index: index,
                   removeItem: removeItem,
@@ -117,37 +131,34 @@ class DeleteIcon extends StatelessWidget {
 }
 
 class HeartIcon extends StatefulWidget {
-  const HeartIcon({Key? key}) : super(key: key);
+  const HeartIcon(
+      {Key? key,
+      required this.isFavored,
+      required this.favoredListener,
+      required this.index})
+      : super(key: key);
+  final bool isFavored;
+  final int index;
+  final Function(int, bool) favoredListener;
   @override
   _HeartIconState createState() => _HeartIconState();
 }
 
 class _HeartIconState extends State<HeartIcon> {
-  bool _isFavorited = false;
-
-  void _favored() {
-    setState(() {
-      if (_isFavorited) {
-        _isFavorited = false;
-      } else {
-        _isFavorited = true;
-      }
-    });
-  }
-
   @override
   Widget build(BuildContext context) {
     return IconButton(
-      icon: (_isFavorited
+      icon: (widget.isFavored
           ? const Icon(Icons.favorite)
           : const Icon(Icons.favorite_outline)),
-      color: (_isFavorited
+      color: (widget.isFavored
           ? Theme.of(context).colorScheme.primaryVariant
           : Colors.black),
       padding: EdgeInsets.all(0),
       splashColor: Colors.transparent,
       highlightColor: Colors.transparent,
-      onPressed: _favored,
+      onPressed: () =>
+          {widget.favoredListener(widget.index, !widget.isFavored)},
     );
   }
 }

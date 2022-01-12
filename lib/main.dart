@@ -2,11 +2,8 @@
 
 import 'package:flutter/material.dart';
 import 'package:noted/note_card.dart';
-// import 'package:noted/submit_button.dart';
 import 'note.dart' as note;
 import 'package:intl/intl.dart';
-
-// import 'package:noted/add_note.dart';
 
 void main() {
   runApp(const MyApp());
@@ -70,6 +67,12 @@ class _MyHomePageState extends State<MyHomePage> {
     });
   }
 
+  void _setFavored(int index, bool currentFavored) {
+    setState(() {
+      noteList[index].setIsFavored(currentFavored);
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -88,8 +91,10 @@ class _MyHomePageState extends State<MyHomePage> {
                 return NoteCard(
                   text: noteList[index].text,
                   date: noteList[index].date,
+                  isFavored: noteList[index].isFavored,
                   itemIndex: index,
                   removeItem: _deleteListItem,
+                  favoredListener: _setFavored,
                 );
               })),
       floatingActionButton: FloatingActionButton(
