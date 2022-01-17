@@ -1,53 +1,72 @@
 // ignore_for_file: prefer_const_constructors, prefer_const_literals_to_create_immutables
 
+import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 import 'package:noted/note_card.dart';
 import 'note.dart' as note;
 import 'package:intl/intl.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:uuid/uuid.dart';
 
-void main() {
-  runApp(const MyApp());
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  runApp(MyApp());
 }
 
-var test = note.Note(text: "global variable", date: "12/23/21");
-
-var noteList = [
-  note.Note(text: "global variable", date: "12/23/21"),
-  note.Note(text: "global variable", date: "12/23/21"),
-  note.Note(text: "global variable", date: "12/23/21"),
-  note.Note(text: "global variable", date: "12/23/21"),
-];
+var noteList = [];
 
 class MyApp extends StatelessWidget {
-  const MyApp({Key? key}) : super(key: key);
+  MyApp({Key? key}) : super(key: key);
+  final Future<FirebaseApp> _fbApp = Firebase.initializeApp();
 
   // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Flutter Demo',
-      theme: ThemeData(
-        primaryColor: Color.fromRGBO(248, 187, 208, 1),
-        primaryColorLight: Color.fromRGBO(255, 238, 255, 1),
-        primaryColorDark: Color.fromRGBO(196, 139, 159, 1),
-        scaffoldBackgroundColor: Color.fromRGBO(255, 238, 255, 1),
-        fontFamily: 'Dongle',
-        textTheme: const TextTheme(
-            headline1: TextStyle(
-                fontSize: 64, fontWeight: FontWeight.w700, color: Colors.white),
-            headline2: TextStyle(
-                fontSize: 48, fontWeight: FontWeight.w700, color: Colors.black),
-            headline3: TextStyle(
-                fontSize: 24, fontWeight: FontWeight.w700, color: Colors.black),
-            bodyText1: TextStyle(
-                fontSize: 24, fontWeight: FontWeight.w400, color: Colors.black),
-            bodyText2: TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.w100,
-                color: Colors.black)),
-      ),
-      home: const MyHomePage(title: 'noted'),
-    );
+        title: 'Flutter Demo',
+        theme: ThemeData(
+          primaryColor: Color.fromRGBO(248, 187, 208, 1),
+          primaryColorLight: Color.fromRGBO(255, 238, 255, 1),
+          primaryColorDark: Color.fromRGBO(196, 139, 159, 1),
+          scaffoldBackgroundColor: Color.fromRGBO(255, 238, 255, 1),
+          fontFamily: 'Dongle',
+          textTheme: const TextTheme(
+              headline1: TextStyle(
+                  fontSize: 64,
+                  fontWeight: FontWeight.w700,
+                  color: Colors.white),
+              headline2: TextStyle(
+                  fontSize: 48,
+                  fontWeight: FontWeight.w700,
+                  color: Colors.black),
+              headline3: TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.w700,
+                  color: Colors.black),
+              bodyText1: TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.w400,
+                  color: Colors.black),
+              bodyText2: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w100,
+                  color: Colors.black)),
+        ),
+        // home: const MyHomePage(title: 'noted'),
+        home: FutureBuilder(
+            future: _fbApp,
+            builder: (context, snapshot) {
+              if (snapshot.hasError) {
+                print('you have an error! ${snapshot.error.toString()}');
+                return Text('Something went wrong!');
+              } else if (snapshot.hasData) {
+                return MyHomePage(title: 'noted');
+              } else {
+                return Center(
+                  child: CircularProgressIndicator(),
+                );
+              }
+            }));
   }
 }
 
@@ -62,6 +81,9 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> {
   void _deleteListItem(int index) {
+    // DatabaseReference _testRef =
+    //     FirebaseDatabase.instance.reference().child("test");
+    // _testRef.set("This is the note you deleted ${noteList[index].text}");
     setState(() {
       noteList.removeAt(index);
     });
@@ -70,6 +92,19 @@ class _MyHomePageState extends State<MyHomePage> {
   void _setFavored(int index, bool currentFavored) {
     setState(() {
       noteList[index].setIsFavored(currentFavored);
+    });
+  }
+
+  void _addNote(note.Note newNote) {
+    setState(() {
+      noteList.add(newNote);
+    });
+    DatabaseReference dbRef = FirebaseDatabase.instance.reference();
+    dbRef.push().set({
+      "id": newNote.id,
+      "date": newNote.date,
+      "text": newNote.text,
+      "isFavored": newNote.isFavored,
     });
   }
 
@@ -102,9 +137,7 @@ class _MyHomePageState extends State<MyHomePage> {
             showDialog(
                     context: context,
                     builder: (BuildContext context) => AddNoteDialog())
-                .then((value) => setState(() {
-                      noteList.add(value);
-                    }));
+                .then((value) => {_addNote(value)});
           },
           tooltip: 'Increment',
           child: const Icon(Icons.add),
@@ -174,6 +207,7 @@ class _AddNoteDialogState extends State<AddNoteDialog> {
 
   @override
   Widget build(BuildContext context) {
+    var uuid = Uuid();
     return AlertDialog(
         shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(50.0),
@@ -225,8 +259,8 @@ class _AddNoteDialogState extends State<AddNoteDialog> {
               ),
               Padding(
                 padding: const EdgeInsets.only(top: 30.0),
-                child: submitNoteButton(
-                    context, note.Note(text: text, date: currentDate())),
+                child: submitNoteButton(context,
+                    note.Note(text: text, date: currentDate(), id: uuid.v4())),
               )
             ],
           ),

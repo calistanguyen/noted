@@ -130,7 +130,7 @@ class DeleteIcon extends StatelessWidget {
   }
 }
 
-class HeartIcon extends StatefulWidget {
+class HeartIcon extends StatelessWidget {
   const HeartIcon(
       {Key? key,
       required this.isFavored,
@@ -141,24 +141,37 @@ class HeartIcon extends StatefulWidget {
   final int index;
   final Function(int, bool) favoredListener;
   @override
-  _HeartIconState createState() => _HeartIconState();
-}
-
-class _HeartIconState extends State<HeartIcon> {
-  @override
   Widget build(BuildContext context) {
     return IconButton(
-      icon: (widget.isFavored
+      icon: (isFavored
           ? const Icon(Icons.favorite)
           : const Icon(Icons.favorite_outline)),
-      color: (widget.isFavored
+      color: (isFavored
           ? Theme.of(context).colorScheme.primaryVariant
           : Colors.black),
       padding: EdgeInsets.all(0),
       splashColor: Colors.transparent,
       highlightColor: Colors.transparent,
-      onPressed: () =>
-          {widget.favoredListener(widget.index, !widget.isFavored)},
+      onPressed: () => {favoredListener(index, !isFavored)},
     );
   }
 }
+
+// class _HeartIconState extends State<HeartIcon> {
+//   @override
+//   Widget build(BuildContext context) {
+//     return IconButton(
+//       icon: (widget.isFavored
+//           ? const Icon(Icons.favorite)
+//           : const Icon(Icons.favorite_outline)),
+//       color: (widget.isFavored
+//           ? Theme.of(context).colorScheme.primaryVariant
+//           : Colors.black),
+//       padding: EdgeInsets.all(0),
+//       splashColor: Colors.transparent,
+//       highlightColor: Colors.transparent,
+//       onPressed: () =>
+//           {widget.favoredListener(widget.index, !widget.isFavored)},
+//     );
+//   }
+// }

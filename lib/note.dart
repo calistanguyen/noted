@@ -2,10 +2,12 @@ class Note {
   String text;
   String date;
   bool isFavored;
+  String id;
 
   Note({
     required this.text,
     required this.date,
+    required this.id,
     this.isFavored = false,
   });
 
