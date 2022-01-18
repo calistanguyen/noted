@@ -81,9 +81,9 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> {
   void _deleteListItem(int index) {
-    // DatabaseReference _testRef =
-    //     FirebaseDatabase.instance.reference().child("test");
-    // _testRef.set("This is the note you deleted ${noteList[index].text}");
+    DatabaseReference dbRef =
+        FirebaseDatabase.instance.ref("notes/${noteList[index].id}");
+    dbRef.set(null);
     setState(() {
       noteList.removeAt(index);
     });
@@ -99,8 +99,9 @@ class _MyHomePageState extends State<MyHomePage> {
     setState(() {
       noteList.add(newNote);
     });
-    DatabaseReference dbRef = FirebaseDatabase.instance.reference();
-    dbRef.push().set({
+    DatabaseReference dbRef =
+        FirebaseDatabase.instance.ref("notes/${newNote.id}");
+    dbRef.set({
       "id": newNote.id,
       "date": newNote.date,
       "text": newNote.text,
@@ -108,6 +109,16 @@ class _MyHomePageState extends State<MyHomePage> {
     });
   }
 
+  //   DatabaseReference ref = FirebaseDatabase.instance.ref("notes");
+  // ref.onValue.listen((event) {
+  //   (event.snapshot.value as Map<dynamic, dynamic>).forEach((key, value) {
+  //     noteList.add(note.Note(
+  //         id: key,
+  //         text: value['text'],
+  //         isFavored: value['isFavored'],
+  //         date: value['date']));
+  //   });
+  // });
   @override
   Widget build(BuildContext context) {
     return Scaffold(
